@@ -1,8 +1,4 @@
 <?php
-
-define("CONNECT_FILE_PATH", dirname(dirname(dirname(__FILE__))));
-require_once(CONNECT_FILE_PATH."/plugins/Core/bootstrap.php");
-
 $satellite_pid = $_POST['satellite_pid'];
 $unique_id = $_POST['unique_id'];
 $unique_field = $_POST['unique_field'];
