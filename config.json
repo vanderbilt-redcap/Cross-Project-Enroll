@@ -1,0 +1,39 @@
+{
+	"name": "Cross-Project Enroll",
+
+	"namespace": "Vanderbilt\\CrossProjectEnrollExternalModule",
+
+	"description": "Cross-Project Enroll is intended to complement Cross Project Piping and will duplicate a record ID in another project based on fields in a central project.",
+
+    "authors": [
+        {
+            "name": "Travis M Wilson",
+            "email": "datacore@vanderbilt.edu",
+            "institution": "Vanderbilt University Medical Center"
+        }
+    ],
+	
+	"permissions": [
+		"hook_data_entry_form_top",
+		"hook_survey_page_top",
+		"select_data"
+	],
+
+	"links": {
+	},
+
+	"system-settings": [
+		
+	],
+	
+	"project-settings": [
+		{
+			"key": "satellite-selection-field",
+			"name": "Satellite Project Selection Field (checkbox field used to select which projects this record will have the potential to be enrolled)",
+			"required": true,
+			"type": "field-list",
+			"repeatable": false,
+			"super-users-only": true
+		}
+	]
+}
