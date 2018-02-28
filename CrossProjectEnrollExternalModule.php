@@ -6,12 +6,18 @@ use ExternalModules\ExternalModules;
 
 class CrossProjectEnrollExternalModule extends AbstractExternalModule
 {
-	function hook_data_entry_form_top($project_id, $record, $instrument, $event_id) {
-		$this->addEnrollOptions($project_id, $record, $instrument);
+	function redcap_every_page_top($project_id) {
+		if(empty($project_id)) {
+			return;
+		} else {
+			if(PAGE == "DataEntry/record_home.php") {
+				$this->addEnrollOptions($project_id, $_GET['id']);
+			}
+		}
 	}
-
-	function hook_survey_page_top($project_id, $record) {
-		// $this->addEnrollOptions($project_id, $record);
+	
+	function hook_data_entry_form_top($project_id, $record, $instrument, $event_id) {
+		$this->addEnrollOptions($project_id, $record);
 	}
 
 	/**
@@ -28,7 +34,7 @@ class CrossProjectEnrollExternalModule extends AbstractExternalModule
 	/**
 	 * Creates an array containing all project IDs which have been checked in the satellite selection field.
 	 */
-	public function getEnrollPIDs($project_id, $record, $instrument, $module_data) {
+	public function getEnrollPIDs($project_id, $record, $module_data) {
 		$thisjson = \REDCap::getData($project_id, 'json', $record, $module_data['satellite-selection-field']['value'], $this->getFirstEventId($project_id));
 		$thisdata = json_decode($thisjson, true);
 		$projIDs = array();
@@ -43,9 +49,9 @@ class CrossProjectEnrollExternalModule extends AbstractExternalModule
 	/**
 	 * Process record and create array of data on projects that have been checked in satellite selection field
 	 */
-	public function getProjectsInfo($project_id, $record, $instrument) {
+	public function getProjectsInfo($project_id, $record) {
 		$module_data = ExternalModules::getProjectSettingsAsArray([$this->PREFIX], $project_id);
-		$projIDs = $this->getEnrollPIDs($project_id, $record, $instrument, $module_data);
+		$projIDs = $this->getEnrollPIDs($project_id, $record, $module_data);
 		$projInfo = array();
 		$curProjRights = \UserRights::getPrivileges($project_id);
 		if(!empty($curProjRights[$project_id])) {
@@ -53,7 +59,7 @@ class CrossProjectEnrollExternalModule extends AbstractExternalModule
 				$satProjRights = \UserRights::getPrivileges($v, key($curProjRights[$project_id]));
 				if(!empty($satProjRights[$v][key($curProjRights[$project_id])])) {
 					$satPID = db_real_escape_string($v);
-					$sql = "SELECT project_id, project_name, app_title FROM redcap_projects WHERE project_id = ".$v;
+					$sql = "SELECT project_id, project_name, app_title FROM redcap_projects WHERE project_id = ".$satPID;
 					$results = $this->query($sql);
 					$projData = db_fetch_assoc($results);
 					if(!empty($projData)) {
@@ -73,8 +79,8 @@ class CrossProjectEnrollExternalModule extends AbstractExternalModule
 	/**
 	 * Add enroll buttons (or view buttons if the record has already been enrolled) for applicable satellite projects.
 	 */
-	public function addEnrollOptions($project_id, $record, $instrument) {
-		$projInfo = $this->getProjectsInfo($project_id, $record, $instrument);
+	public function addEnrollOptions($project_id, $record) {
+		$projInfo = $this->getProjectsInfo($project_id, $record);
 		echo $this->getEnrollJS($projInfo, $record);
 	}
 
@@ -115,7 +121,11 @@ class CrossProjectEnrollExternalModule extends AbstractExternalModule
 						htmlToAppend = '<div style="padding-bottom: 20px; max-width: 800px;">'+htmlToAppend+'</div>';
 					}
 
-					$('#form').before(htmlToAppend);
+					if($('#record_display_name').length) {
+						$('#record_display_name').before(htmlToAppend);
+					} else {
+						$('#form').before(htmlToAppend);
+					}
 
 					$('.cPEnrollBtn').click(function(evt){
 						evt.preventDefault();

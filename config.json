@@ -5,17 +5,17 @@
 
 	"description": "Cross-Project Enroll is intended to complement Cross Project Piping and will duplicate a record ID in another project based on fields in a central project.",
 
-    "authors": [
-        {
-            "name": "Travis M Wilson",
-            "email": "datacore@vanderbilt.edu",
-            "institution": "Vanderbilt University Medical Center"
-        }
-    ],
+	"authors": [
+		{
+			"name": "Travis M. Wilson",
+			"email": "datacore@vanderbilt.edu",
+			"institution": "Vanderbilt University Medical Center"
+		}
+	],
 	
 	"permissions": [
-		"hook_data_entry_form_top",
-		"hook_survey_page_top",
+		"redcap_every_page_top",
+		"redcap_data_entry_form_top",
 		"select_data"
 	],
 
