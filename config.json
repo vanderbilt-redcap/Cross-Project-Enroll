@@ -34,6 +34,24 @@
 			"type": "field-list",
 			"repeatable": false,
 			"super-users-only": true
+		},
+		{
+			"key": "enroll-destination",
+			"name": "Enroll Destination (where will the user land on the satellite project once they click enroll?):",
+			"required": true,
+			"type": "dropdown",
+			"choices": [
+				{
+					"value": 0,
+					"name": "First Instrument"
+				},
+				{
+					"value": 1,
+					"name": "Record Home Page"
+				}
+			],
+			"repeatable": false,
+			"super-users-only": true
 		}
 	]
 }

@@ -78,13 +78,14 @@ class CrossProjectEnrollExternalModule extends AbstractExternalModule
 	 */
 	public function addEnrollOptions($project_id, $record) {
 		$projInfo = $this->getProjectsInfo($project_id, $record);
-		echo $this->getEnrollJS($projInfo, $record);
+		echo $this->getEnrollJS($projInfo, $project_id, $record);
 	}
 
 	/**
 	 * Return JS to add enroll/view buttons to top of form.
 	 */
-	private function getEnrollJS($projInfo = array(), $record) {
+	private function getEnrollJS($projInfo = array(), $project_id, $record) {
+		$module_data = ExternalModules::getProjectSettingsAsArray([$this->PREFIX], $project_id);
 		list($prefix, $version) = ExternalModules::getParseModuleDirectoryPrefixAndVersion($this->getModuleDirectoryName());
 		$url = ExternalModules::getUrl($prefix, "enroll_record.php");
 		ob_start();
@@ -130,8 +131,11 @@ class CrossProjectEnrollExternalModule extends AbstractExternalModule
 							var satellitePid = $(this).attr('data-satellite-pid');
 							$.post(url, { satellite_pid: satellitePid, unique_id: curRecord, unique_field: 'record_id'}, function(data) {
 								if(data.status) {
-									// window.location.href = "<?php echo APP_PATH_WEBROOT; ?>DataEntry/record_home.php?pid="+data.pid+"&arm=1&id="+data.record_id;
-									window.location.href = "<?php echo APP_PATH_WEBROOT; ?>DataEntry/index.php?pid="+data.pid+"&id="+data.record_id+"&event_id="+data.first_event+"&page="+data.first_inst;
+									<?php if(!empty($module_data['enroll-destination']['value'])): ?>
+										window.location.href = "<?php echo APP_PATH_WEBROOT; ?>DataEntry/record_home.php?pid="+data.pid+"&arm=1&id="+data.record_id;
+									<?php else: ?>
+										window.location.href = "<?php echo APP_PATH_WEBROOT; ?>DataEntry/index.php?pid="+data.pid+"&id="+data.record_id+"&event_id="+data.first_event+"&page="+data.first_inst;
+									<?php endif; ?>
 								} else {
 									alert('There was a problem enrolling this record.');
 								}
