@@ -58,12 +58,9 @@ class CrossProjectEnrollExternalModule extends AbstractExternalModule
 			foreach($projIDs AS $k => $v) {
 				$satProjRights = \UserRights::getPrivileges($v, key($curProjRights[$project_id]));
 				if(!empty($satProjRights[$v][key($curProjRights[$project_id])])) {
-					$satPID = db_real_escape_string($v);
-					$sql = "SELECT project_id, project_name, app_title FROM redcap_projects WHERE project_id = ".$satPID;
-					$results = $this->query($sql);
-					$projData = db_fetch_assoc($results);
-					if(!empty($projData)) {
-						$projInfo[$v]['name'] = $projData['app_title'];
+					$satProjObj = new \Project($v);
+					if(!empty($satProjObj->project)) {
+						$projInfo[$v]['name'] = $satProjObj->project['app_title'];
 						
 						$thisjson = \REDCap::getData($v, 'json', $record, 'record_id');
 						$thisdata = json_decode($thisjson, true);
@@ -133,7 +130,8 @@ class CrossProjectEnrollExternalModule extends AbstractExternalModule
 							var satellitePid = $(this).attr('data-satellite-pid');
 							$.post(url, { satellite_pid: satellitePid, unique_id: curRecord, unique_field: 'record_id'}, function(data) {
 								if(data.status) {
-									window.location.href = "<?php echo APP_PATH_WEBROOT; ?>DataEntry/record_home.php?pid="+data.pid+"&arm=1&id="+data.record_id;
+									// window.location.href = "<?php echo APP_PATH_WEBROOT; ?>DataEntry/record_home.php?pid="+data.pid+"&arm=1&id="+data.record_id;
+									window.location.href = "<?php echo APP_PATH_WEBROOT; ?>DataEntry/index.php?pid="+data.pid+"&id="+data.record_id+"&event_id="+data.first_event+"&page="+data.first_inst;
 								} else {
 									alert('There was a problem enrolling this record.');
 								}

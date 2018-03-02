@@ -22,6 +22,13 @@ if(empty($thisdata)) {
 	$return['status'] = ($insert['item_count'] >= 1 ? true : false );
 	$return['pid'] = $satellite_pid;
 	$return['record_id'] = $unique_id;
+	$return['first_event'] = $firstEvent;
+
+	$satProjForms = $satelliteProject->forms;
+	reset($satProjForms);
+
+	
+	$return['first_inst'] = key($satProjForms);
 
 	echo json_encode($return);
 } else {
