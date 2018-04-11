@@ -6,6 +6,19 @@ use ExternalModules\ExternalModules;
 
 class CrossProjectEnrollExternalModule extends AbstractExternalModule
 {
+	public $modSettings;
+
+	function __construct() {
+		parent::__construct();
+		if(!defined("PROJECT_ID")) {
+			return;
+		}
+		$this->modSettings = ExternalModules::getProjectSettingsAsArray([$this->PREFIX], PROJECT_ID);
+		if(!isset($this->modSettings['satellite-selection-field']['value']) || empty($this->modSettings['satellite-selection-field']['value'])) {
+			return;
+		}
+	}
+	
 	function redcap_every_page_top($project_id) {
 		if(empty($project_id)) {
 			return;
@@ -21,26 +34,17 @@ class CrossProjectEnrollExternalModule extends AbstractExternalModule
 	}
 
 	/**
-	 * Nicely formatted var_export for checking output .
-	 */
-	function pDump($value, $die = false) {
-		highlight_string("<?php\n\$data =\n" . var_export($value, true) . ";\n?>");
-		echo '<hr>';
-		if($die) {
-			die();
-		}
-	}
-
-	/**
 	 * Creates an array containing all project IDs which have been checked in the satellite selection field.
 	 */
-	public function getEnrollPIDs($project_id, $record, $module_data) {
-		$thisjson = \REDCap::getData($project_id, 'json', $record, $module_data['satellite-selection-field']['value'], $this->getFirstEventId($project_id));
+	private function getEnrollPIDs($project_id, $record) {
+		$thisjson = \REDCap::getData($project_id, 'json', $record, $this->modSettings['satellite-selection-field']['value'], $this->getFirstEventId($project_id));
 		$thisdata = json_decode($thisjson, true);
 		$projIDs = array();
-		foreach ($thisdata[0] AS $k => $v) {
-			if($v == 1) {
-				$projIDs[] = str_replace($module_data['satellite-selection-field']['value'].'___', '' , $k);
+		if(isset($thisdata[0]) && is_array($thisdata[0])) {
+			foreach ($thisdata[0] AS $k => $v) {
+				if($v == 1) {
+					$projIDs[] = str_replace($this->modSettings['satellite-selection-field']['value'].'___', '' , $k);
+				}
 			}
 		}
 		return $projIDs;
@@ -49,12 +53,11 @@ class CrossProjectEnrollExternalModule extends AbstractExternalModule
 	/**
 	 * Process record and create array of data on projects that have been checked in satellite selection field
 	 */
-	public function getProjectsInfo($project_id, $record) {
-		$module_data = ExternalModules::getProjectSettingsAsArray([$this->PREFIX], $project_id);
-		$projIDs = $this->getEnrollPIDs($project_id, $record, $module_data);
+	private function getProjectsInfo($project_id, $record) {
+		$projIDs = $this->getEnrollPIDs($project_id, $record);
 		$projInfo = array();
 		$curProjRights = \UserRights::getPrivileges($project_id);
-		if(!empty($curProjRights[$project_id])) {
+		if(!empty($projIDs) && !empty($curProjRights[$project_id])) {
 			foreach($projIDs AS $k => $v) {
 				$satProjRights = \UserRights::getPrivileges($v, key($curProjRights[$project_id]));
 				if(!empty($satProjRights[$v][key($curProjRights[$project_id])])) {
@@ -85,11 +88,10 @@ class CrossProjectEnrollExternalModule extends AbstractExternalModule
 	 * Return JS to add enroll/view buttons to top of form.
 	 */
 	private function getEnrollJS($projInfo = array(), $project_id, $record) {
-		$module_data = ExternalModules::getProjectSettingsAsArray([$this->PREFIX], $project_id);
 		list($prefix, $version) = ExternalModules::getParseModuleDirectoryPrefixAndVersion($this->getModuleDirectoryName());
 		$url = ExternalModules::getUrl($prefix, "enroll_record.php");
 		ob_start();
-		if(!empty($projInfo)):
+		if(!empty($projInfo) && is_array($projInfo)):
 		?>
 			<script type='text/javascript'>
 				$(document).ready(function(){
@@ -131,7 +133,7 @@ class CrossProjectEnrollExternalModule extends AbstractExternalModule
 							var satellitePid = $(this).attr('data-satellite-pid');
 							$.post(url, { satellite_pid: satellitePid, unique_id: curRecord, unique_field: 'record_id'}, function(data) {
 								if(data.status) {
-									<?php if(!empty($module_data['enroll-destination']['value'])): ?>
+									<?php if(!empty($this->modSettings['enroll-destination']['value'])): ?>
 										window.location.href = "<?php echo APP_PATH_WEBROOT; ?>DataEntry/record_home.php?pid="+data.pid+"&arm=1&id="+data.record_id;
 									<?php else: ?>
 										window.location.href = "<?php echo APP_PATH_WEBROOT; ?>DataEntry/index.php?pid="+data.pid+"&id="+data.record_id+"&event_id="+data.first_event+"&page="+data.first_inst;
